@@ -4,6 +4,7 @@ var Spotify = require("node-spotify-api");
 var request = require("request");
 var inputOne = process.argv[2];
 var inputTwo = process.argv[3];
+var fs = require("fs");
 
 
 switch (inputOne) {
@@ -47,6 +48,7 @@ function myTweets(){
 	});
 
 	var params = {screen_name: 'chelss25', count: 20 };
+	var responseBody = {};
 				
 				
 
@@ -58,6 +60,16 @@ client.get('statuses/user_timeline', params, function(error, tweets, response) {
 			console.log(tweets[i].text);
 			console.log("********************");
 
+		responseBody.tweets = tweets[i].text;
+
+		var tweetData = JSON.stringify(responseBody) + "\n";
+
+		fs.appendFile('log.txt', `${tweetData}\n`, function(error){
+			if (error){
+				return console.log("ERROR", error);
+			}
+		});
+
 		}
 	}
 
@@ -67,7 +79,10 @@ client.get('statuses/user_timeline', params, function(error, tweets, response) {
 	});
 }
 
-function spotifyThis() {
+function spotifyThis(query) {
+
+
+	var song = query || "Ace of Base";
 	var spotify = new Spotify({
 		id: "27c69fd7ec7f4b8fb718ba9e2fa1cb3b",
 		secret: "eea3068a82be4215ab0334e97ed4eb38"
@@ -75,26 +90,39 @@ function spotifyThis() {
 	});
 
 	spotify
-	.search({ type: 'track', limit: 5, query: inputTwo})
+	.search({ type: 'track', limit: 5, query: song})
 	.then(function(response) {
 
+		var responseBody = {};
 
 		for (var i=0; i < response.tracks.items.length; i++) {
 
-			console.log(response.tracks.items[i].name);
-			console.log(response.tracks.items[i].album.name);
+			console.log("Song Name: " + response.tracks.items[i].name);
+			console.log("Album Name: " + response.tracks.items[i].album.name);
 
 			for (var j=0; j < response.tracks.items[i].album.artists.length; j++) {
 
-				console.log(response.tracks.items[i].album.artists[j].name);
-				console.log(response.tracks.items[i].album.artists[j].href);
+				console.log("Artist: " + response.tracks.items[i].album.artists[j].name);
+				console.log("Link: " + response.tracks.items[i].album.artists[j].href);
 				console.log("********************");
+
+		responseBody.name = response.tracks.items[i].name;
+		responseBody.albumName = response.tracks.items[i].album.name;
+		responseBody.artistName = response.tracks.items[i].album.artists[j].name;
+		responseBody.link = response.tracks.items[i].album.artists[j].href;
+
+		var songData = JSON.stringify(responseBody) + "\n";
+
+		fs.appendFile('log.txt', `${songData}\n`, function(error){
+			if (error){
+				return console.log("ERROR", error);
+			}
+		});
 
 			}
 		}
 	})
-
-	.catch(function(err) {
+	.catch(function(error) {
 		console.log(error);
 
 	});
@@ -102,10 +130,12 @@ function spotifyThis() {
 }
 
 
-	function movieThis() {
+	function movieThis(movieTitle) {
+
+		var title = movieTitle || "Mr. Nobody";
 		//IMBD info request
 		// Then run a request to the OMDB API with the movie specified
-		request("http://www.omdbapi.com/?t=" + inputTwo + "&y=&plot=short&tomatoes=true&apikey=40e9cece", function(error, response, body) {
+		request("http://www.omdbapi.com/?t=" + title + "&y=&plot=short&tomatoes=true&apikey=40e9cece", function(error, response, body) {
 		  // If the request is successful (i.e. if the response status code is 200)
 		  if (!error && response.statusCode === 200) {
 		    // Parse the body of the site and recover just the imdbRating
@@ -116,23 +146,30 @@ function spotifyThis() {
 		    console.log("Country Produced in: " + JSON.parse(body).Country);
 		    console.log("Language: " + JSON.parse(body).Language);
 		    console.log("Movie Plot: " + JSON.parse(body).Plot);
-		    console.log("Country Produced in: " + JSON.parse(body).Country);
 		    console.log("Actor(s): " + JSON.parse(body).Actors);
 		    console.log("Rotten Tomatoes Rating: " + JSON.parse(body).tomatoRating);
 		    console.log("Rotten Tomatoes URL: " + JSON.parse(body).tomatoURL);
 		    console.log("********************"); 
 
+		var responseBody = {};
 
+		responseBody.title = JSON.parse(body).Title;
+		responseBody.year = JSON.parse(body).Year;
+		responseBody.movieRating = JSON.parse(body).imbdRating;
+		responseBody.country = JSON.parse(body).Country;
+		responseBody.language = JSON.parse(body).Language;
+		responseBody.plot = JSON.parse(body).Plot;
+		responseBody.actors = JSON.parse(body).Actors;
+		responseBody.tomatoRating = JSON.parse(body).tomatoRating;
+		responseBody.tomatoURL = JSON.parse(body).tomatoURL;
 
-    // 	else if(inputTwo == ) { 
+		var movieData = JSON.stringify(responseBody) + "\n";
 
-		  //   console.log("-----------------------");
-		  //   console.log("If you haven't watched 'Mr. Nobody,' then you should: http://www.imdb.com/title/tt0485947/");
-		  //   console.log("It's on Netflix!");
-
-
-  		// }
-
+		fs.appendFile('log.txt', `${movieData}\n`, function(error){
+			if (error){
+				return console.log("ERROR", error);
+			}
+		});
 
   		
   	}
@@ -140,15 +177,12 @@ function spotifyThis() {
 }
 
 		function doWhatItSays(){
-			fs.readFile('random.txt', 'utf8', function(err, data){
 
-				if (err){ 
-					return console.log(err);
-				}
+			  fs.readFile('random.txt', "utf8", function(error, data){
+    			var txt = data.split(',');
 
-				var dataArr = data.split(',');
+    			spotifyThis(txt[1]);
 
-				processCommands(dataArr[0], dataArr[1]);
 			});
 		}
 
