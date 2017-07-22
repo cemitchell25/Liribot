@@ -1,3 +1,5 @@
+
+//variable created to hold the requests as well as the user inputs
 var infoRequest = require('./keys.js');
 var Twitter = require("twitter");
 var Spotify = require("node-spotify-api");
@@ -6,7 +8,7 @@ var inputOne = process.argv[2];
 var inputTwo = process.argv[3];
 var fs = require("fs");
 
-
+//switch statement on inputOne to call different commands
 switch (inputOne) {
 
 	// handle the my-tweets command
@@ -37,9 +39,10 @@ switch (inputOne) {
 
 
 
-
+// function to handle the my-tweets call 
 function myTweets(){
 
+	//variable that holds all of my twitter keys
 	var client = new Twitter({
 		consumer_key: infoRequest.twitterKeys.consumer_key,
 		consumer_secret: infoRequest.twitterKeys.consumer_secret,
@@ -47,11 +50,12 @@ function myTweets(){
 		access_token_secret: infoRequest.twitterKeys.access_token_secret
 	});
 
+	//params to pass through twitter on what username to search for / limit
 	var params = {screen_name: 'chelss25', count: 20 };
 	var responseBody = {};
 				
 				
-
+// getting the info from twitter and specifically pulling the tweet
 client.get('statuses/user_timeline', params, function(error, tweets, response) {
 	if (!error) {
 
@@ -79,9 +83,10 @@ client.get('statuses/user_timeline', params, function(error, tweets, response) {
 	});
 }
 
+// function to handle the spotify-this-song call 
 function spotifyThis(query) {
 
-
+	// variables to search for either userinput or default of "ace of base"
 	var song = query || "Ace of Base";
 	var spotify = new Spotify({
 		id: "27c69fd7ec7f4b8fb718ba9e2fa1cb3b",
@@ -89,12 +94,14 @@ function spotifyThis(query) {
 
 	});
 
+	// getting the info from spotify and specifically pulling the requested info
 	spotify
 	.search({ type: 'track', limit: 5, query: song})
 	.then(function(response) {
 
 		var responseBody = {};
 
+		//looping through spotify info to pull specific JSON items
 		for (var i=0; i < response.tracks.items.length; i++) {
 
 			console.log("Song Name: " + response.tracks.items[i].name);
@@ -106,6 +113,8 @@ function spotifyThis(query) {
 				console.log("Link: " + response.tracks.items[i].album.artists[j].href);
 				console.log("********************");
 
+
+		//logging all information on log.txt
 		responseBody.name = response.tracks.items[i].name;
 		responseBody.albumName = response.tracks.items[i].album.name;
 		responseBody.artistName = response.tracks.items[i].album.artists[j].name;
@@ -153,6 +162,7 @@ function spotifyThis(query) {
 
 		var responseBody = {};
 
+		//logging all information on log.txt
 		responseBody.title = JSON.parse(body).Title;
 		responseBody.year = JSON.parse(body).Year;
 		responseBody.movieRating = JSON.parse(body).imbdRating;
